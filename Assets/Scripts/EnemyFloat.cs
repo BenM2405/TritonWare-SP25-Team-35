@@ -10,6 +10,8 @@ public class EnemyFloat : MonoBehaviour
     public float followRange = 10f;
     public float chaseSpeed = 3f;
 
+    public int ownerID = 0;
+
     private Vector2 startPos;
     private float timeOffset;
     private Transform targetPlayer;
@@ -22,21 +24,18 @@ public class EnemyFloat : MonoBehaviour
 
     void Update()
     {
-        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-        Transform nearest = null;
-        float nearestDist = Mathf.Infinity;
-        
-        foreach (var p in players)
+        string targetName = (ownerID == 1) ? "player1" : "player2";
+        GameObject targetObj = GameObject.Find(targetName);
+
+        if (targetObj)
         {
-            float dist = Vector2.Distance(p.transform.position, transform.position);
-            if (dist < nearestDist)
-            {
-                nearestDist = dist;
-                nearest = p.transform;
-            }
+            float dist = Vector2.Distance(targetObj.transform.position, transform.position);
+            if (dist <= followRange)
+                targetPlayer = targetObj.transform;
+            else
+                targetPlayer = null;
         }
 
-        targetPlayer = (nearestDist <= followRange) ? nearest : null;
 
         float hoverY = Mathf.Sin(Time.time * hoverFrequency + timeOffset) * hoverAmplitude;
         transform.position += new Vector3(Mathf.Sin(Time.time * 0.5f + timeOffset) * moveSpeed * Time.deltaTime, hoverY * Time.deltaTime, 0);
@@ -45,6 +44,19 @@ public class EnemyFloat : MonoBehaviour
         {
             Vector2 dir = (targetPlayer.position - transform.position).normalized;
             transform.position += (Vector3)dir * chaseSpeed * Time.deltaTime;
+        } 
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            PlayerController hitPlayer = other.GetComponent<PlayerController>();
+
+            GameManager.Instance.SendEnemyToOtherPlayer(this.gameObject, other.gameObject);
+
+            GameManager.Instance.ResetPlayer(hitPlayer);
         }
     }
+
 }

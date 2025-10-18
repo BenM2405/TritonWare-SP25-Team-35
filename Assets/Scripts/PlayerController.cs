@@ -43,4 +43,13 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        EnemyFloat enemy = collision.gameObject.GetComponent<EnemyFloat>();
+        if (enemy != null)
+        {
+            GameManager.Instance.PlayerHitEnemy(this, enemy);
+        }
+    }
+
 }
