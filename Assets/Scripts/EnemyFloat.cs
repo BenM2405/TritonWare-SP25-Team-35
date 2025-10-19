@@ -9,17 +9,20 @@ public class EnemyFloat : MonoBehaviour
     public float hoverFrequency = 2f;
     public float followRange = 10f;
     public float chaseSpeed = 3f;
-
+    public float boostedChaseSpeed = 6f; 
     public int ownerID = 0;
 
     private Vector2 startPos;
     private float timeOffset;
     private Transform targetPlayer;
+    private float originalChaseSpeed; 
+    private Coroutine boostCoroutine; 
 
     void Start()
     {
         startPos = transform.position;
         timeOffset = Random.Range(0f, Mathf.PI * 2f);
+        originalChaseSpeed = chaseSpeed; 
     }
 
     void Update()
@@ -44,7 +47,24 @@ public class EnemyFloat : MonoBehaviour
         {
             Vector2 dir = (targetPlayer.position - transform.position).normalized;
             transform.position += (Vector3)dir * chaseSpeed * Time.deltaTime;
-        } 
+        }
+    }
+
+    public void ActivateBoost(float duration)
+    {
+        if (boostCoroutine != null)
+        {
+            StopCoroutine(boostCoroutine);
+        }
+        boostCoroutine = StartCoroutine(BoostSpeedCoroutine(duration));
+    }
+
+    private IEnumerator BoostSpeedCoroutine(float duration)
+    {
+        chaseSpeed = boostedChaseSpeed; 
+        yield return new WaitForSeconds(duration); 
+        chaseSpeed = originalChaseSpeed; 
+        boostCoroutine = null; 
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -52,11 +72,12 @@ public class EnemyFloat : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             PlayerController hitPlayer = other.GetComponent<PlayerController>();
-
-            GameManager.Instance.SendEnemyToOtherPlayer(this.gameObject, other.gameObject);
-
+            
+            // 1. Reset the player who was hit
             GameManager.Instance.ResetPlayer(hitPlayer);
+            
+            // 2. NEW: Reset this enemy to its starting position
+            transform.position = startPos;
         }
     }
-
 }

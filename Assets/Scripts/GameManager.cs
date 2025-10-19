@@ -17,10 +17,28 @@ public class GameManager : MonoBehaviour
     public Transform player1SpawnPoint;
     public Transform player2SpawnPoint;
 
+    [Header("Sabotage Settings")] // <-- NEW
+    public float sabotageBoostDuration = 5.0f; // Duration of the speed boost in seconds
 
     void Awake()
     {
         Instance = this;
+    }
+
+    // --- NEW FUNCTION ---
+    public void SabotageOtherPlayer(int senderID)
+    {
+        // Find the OTHER player's enemy parent
+        Transform targetEnemyParent = (senderID == 1) ? enemyParent2 : enemyParent1;
+
+        // Find the EnemyFloat script on the enemy in that parent
+        EnemyFloat enemyToBoost = targetEnemyParent.GetComponentInChildren<EnemyFloat>();
+
+        // If we found an enemy, call its boost function
+        if (enemyToBoost != null)
+        {
+            enemyToBoost.ActivateBoost(sabotageBoostDuration);
+        }
     }
 
     public void PlayerHitEnemy(PlayerController player, EnemyFloat enemy)
